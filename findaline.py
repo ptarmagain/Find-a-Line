@@ -11,14 +11,13 @@ promising_points = []
 valid_lines = []
 
 def eval_pixel(c, a1, a2):
-    # print(c)
     # Find distance between current location and nearest anchor   
     d = min(m.dist(c, a1), m.dist(c, a2))
     
     # Determine if this pixel meets our criteria
     elev_c = elevation_band[*c]           # modularize, cannot have a dependency like this. If cannot modularize then pass elevation band as a variable
     elev_a = min(elevation_band[*a1], elevation_band[*a2])
-    print(elev_c <= elev_a - 0.15 * d - 6 * pxl_gran)
+    print((elev_c <= elev_a - (0.15 * d) - (6 ))) # * pxl_gran
 
     print(elev_a, d, elev_c)
 
@@ -30,7 +29,7 @@ with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/viz/viz.be_
     # filter null data points?
 
     # find significant slopes
-    significant_slopes = np.argwhere(slope_band > pxl_gran * 1.15 + 6) #* pxl_gran)
+    significant_slopes = np.argwhere(slope_band > pxl_gran * 1.15 + 6)
     significant_slopes_list = significant_slopes.tolist()
     print(len(significant_slopes_list))
 
