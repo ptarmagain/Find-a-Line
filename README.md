@@ -1,5 +1,5 @@
 # Find-a-Line
-This is an application that finds and outputs locations with significant highline potential. It works by extracting DEM data from .tiff files and evalutating the potential of each raster pixel by applying a custom "maximum elevation formula". Considering the vast volume of data available, a genetic algorithm making use of the sigmoid function is implemented in order to focus on regions that have the most promising topographical characteristics.
+This is an application that finds locations with significant highline potential. It works by extracting DEM data from .tiff files and evalutating the potential of each raster pixel by applying a custom "maximum elevation formula". Considering the vast volume of data available, a genetic algorithm is implemented in order to focus on regions with the most promising topographical characteristics.
 
 ## Maximum Elevation Formula
 Due to deflection, the further you travel from the nearest anchor the lower elevation required. The maximum safe elevation for a hypothetical 0 meter highline is 6 meters lower than the anchors- this is to account for a leash fall. From there we require 15cm more clearance for every meter longer the line is. This slope was calculated based on a mid stretch webbing, a 155kg athlete, and 2kN tension for a median stretch webbing. Naturally there are many other variables to account for, but for simplicity sake we are using a formula that may be described as an "overestimation" for this specific application. 
@@ -22,7 +22,7 @@ This may be visualised as a slope below the line that is always exactly 6 meters
 - We first extract raster pixels of significant slope to use as a starting point for promising anchors.
 - Using two random points between argument-designated distance from each other, we "draw" a line using a DDA (Digital Differential Analyzer) algorithm
 - For each raster pixel that exists along this line, the maximum elevation is calculated using our formula, and the pixel's elevation is subtracted from this value to retrieve the elevation difference. *A **positive** elevation difference implies that the pixel's elevation is **lower** than our required maximum.. a **higher** difference is **better**!*
-- The elevation differences of each pixel are summed and passed through a sigmoid function to determine a weight that is used for genetics.
+- The elevation differences of each pixel are summed and passed through a sigmoid function to determine a weight that is used for genetic fitness.
 
 ## Learn More
 - [Tension calculator](https://www.balancecommunity.com/pages/tension-calculator)
