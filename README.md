@@ -22,7 +22,7 @@ This may be visualised as a slope below the line that is always exactly 6 meters
 - We first extract raster pixels of significant slope to use as a starting point for promising anchors.
 - Using two random points between argument-designated distance from each other, we "draw" a line using a DDA (Digital Differential Analyzer) algorithm
 - For each raster pixel that exists along this line, the maximum elevation is calculated using our formula, and the pixel's elevation is subtracted from this value to retrieve the elevation difference. *A **positive** elevation difference implies that the pixel's elevation is **lower** than our required maximum.. a **higher** difference is **better**!*
-- The elevation differences of each pixel are summed and passed through a sigmoid function to determine weights that are used for genetics.
+- The elevation differences of each pixel are summed and passed through a sigmoid function to determine a weight that is used for genetics.
 
 ## Learn More
 - [Tension calculator](https://www.balancecommunity.com/pages/tension-calculator)
