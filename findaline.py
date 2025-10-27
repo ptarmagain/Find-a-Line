@@ -10,17 +10,6 @@ desired_max_length = 300
 promising_points = []
 valid_lines = []
 
-def eval_pixel(c, a1, a2):
-    # Find distance between current location and nearest anchor   
-    d = min(m.dist(c, a1), m.dist(c, a2))
-    
-    # Determine if this pixel meets our criteria
-    elev_c = elevation_band[*c]           # modularize, cannot have a dependency like this. If cannot modularize then pass elevation band as a variable
-    elev_a = min(elevation_band[*a1], elevation_band[*a2])
-    print((elev_c <= elev_a - (0.15 * d) - (6 ))) # * pxl_gran
-
-    print(elev_a, d, elev_c)
-
 
 # read slopes file
 with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/viz/viz.be_slope.tif') as slope_dataset:
@@ -47,32 +36,53 @@ with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.t
     # get the coordinates of two promising points
     x_a1, y_a1 = elevation_dataset.index(*promising_points[0])
     print(x_a1, y_a1)
-    print(elevation_band[x_a1, y_a1])  
 
     x_a2, y_a2 = elevation_dataset.index(*promising_points[10])
     print(x_a2, y_a2)
-    print(elevation_band[x_a2, y_a2])  
 
-    print('DDA begins here:')
-
-    # draw a line between the two points using DDA
-    x = x_a1
-    y = y_a1
+    # DDA algorithm - draw a line between the two points
+    x_c = x_a1  # initalize current "step" coordinates to first anchor
+    y_c = y_a1
     dx = x_a2 - x_a1
     dy = y_a2 - y_a1
     steps = max(abs(dx), abs(dy))
     x_increment = dx / steps
     y_increment = dy / steps
-    print(x_increment, y_increment  )
 
+    elev_diffs = []
     for i in range(steps - 1):
-        x = x + x_increment
-        y = y + y_increment
-        eval_pixel([round(x), round(y)], [x_a1, y_a1], [x_a2, y_a2])
+        x_c = x_c + x_increment
+        y_c = y_c + y_increment
+        # Distance to nearest anchor
+        d = min(m.dist([x_c, y_c], [x_a1, y_a1]), m.dist([x_c, y_c], [x_a2, y_a2]))   
+        # Elevation of nearest anchor
+        elev_nr_a = min(elevation_band[round(x_a1), round(y_a1)], elevation_band[round(x_a2), round(y_a2)])
+        # Find elevation of current pixel in our line
+        elev_c = elevation_band[round(x_c), round(y_c)]
+        # Get difference of max acceptable elevation and current pixel elevation
+        elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
+        # Use this to asign line weight
+        elev_diffs.append(elev_diff)
+    # Apply the sigmoid function to the sum of all our height differences and assign it to weight
+    tot_elev_diff = (sum(elev_diffs) - np.mean(elev_diffs)) / np.std(elev_diffs) # Z-Score Standardization to avoid extreme sigmoid resoluts
+    weight = 1 / (1 + np.exp(-tot_elev_diff))
+    # If every pixel in the current line is below our max acceptable elevation, add it to the "valid lines" list
+    if all(e <= 0 for e in elev_diffs):
+        valid_lines.append()
+    print(tot_elev_diff)
+    print(weight)
+        
+    # Evaluate line as a whole
+    # if weight < .5 then good genetics pass
+    # if weight >=.5 then detemine how poorly performed
 
 
 
-    # log to console
+
+
+
+
+    # log to console isntead of priting
 
 
 
