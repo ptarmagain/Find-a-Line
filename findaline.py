@@ -48,8 +48,8 @@ with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.t
     steps = max(abs(dx), abs(dy))
     x_increment = dx / steps
     y_increment = dy / steps
-
     elev_diffs = []
+
     for i in range(steps - 1):
         x_c = x_c + x_increment
         y_c = y_c + y_increment
@@ -61,20 +61,20 @@ with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.t
         elev_c = elevation_band[round(x_c), round(y_c)]
         # Get difference of max acceptable elevation and current pixel elevation
         elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
-        # Use this to asign line weight
+        # Add to list of elevation differences for each pixel in line
         elev_diffs.append(elev_diff)
-    # Apply the sigmoid function to the sum of all our height differences and assign it to weight
-    tot_elev_diff = (sum(elev_diffs) - np.mean(elev_diffs)) / np.std(elev_diffs) # Z-Score Standardization to avoid extreme sigmoid resoluts
-    weight = 1 / (1 + np.exp(-tot_elev_diff))
+    # Apply the sigmoid function to the sum of all our height differences
+    tot_elev_diff = (sum(elev_diffs) - np.mean(elev_diffs)) / np.std(elev_diffs) # Z-Score Standardization to avoid extreme sigmoid results
+    fitness = 1 / (1 + np.exp(-tot_elev_diff)) # sigmoid function
     # If every pixel in the current line is below our max acceptable elevation, add it to the "valid lines" list
     if all(e <= 0 for e in elev_diffs):
-        valid_lines.append()
+        valid_lines.append([[x_a1, y_a1],[x_a2, y_a2], fitness])
     print(tot_elev_diff)
-    print(weight)
+    print(valid_lines)
         
     # Evaluate line as a whole
-    # if weight < .5 then good genetics pass
-    # if weight >=.5 then detemine how poorly performed
+    # if fitness < .5 then good genetics pass
+    # if fitness >=.5 then detemine how poorly performed
 
 
 
