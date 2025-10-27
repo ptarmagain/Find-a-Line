@@ -7,76 +7,93 @@ import math as m
 pxl_gran = 30   # pixel granularity
 desired_min_length = 90
 desired_max_length = 300
-promising_points = []
 valid_lines = []
 
 
-# read slopes file
-with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/viz/viz.be_slope.tif') as slope_dataset:
-    slope_band = slope_dataset.read(1)
+def find_significant_slopes() -> list:
+    promising_points = []
+    # read slopes file
+    with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/viz/viz.be_slope.tif') as slope_dataset:
+        slope_band = slope_dataset.read(1)
 
-    # filter null data points?
+        # filter null data points?
 
-    # find significant slopes
-    significant_slopes = np.argwhere(slope_band > pxl_gran * 1.15 + 6)
-    significant_slopes_list = significant_slopes.tolist()
-    print(len(significant_slopes_list))
+        # find significant slopes
+        significant_slopes = np.argwhere(slope_band > pxl_gran * 1.15 + 6)
+        significant_slopes_list = significant_slopes.tolist()
+        print(len(significant_slopes_list))
 
-    # format significant slopes and store as coordinates in promising points list
-    for point in significant_slopes_list:
-        coords_precasted = list(slope_dataset.xy(*point))
-        coords = [float(c) for c in coords_precasted]
-        promising_points.append(coords)
+        # format significant slopes and store as coordinates in promising points list
+        for point in significant_slopes_list:
+            # coords_precasted = list(slope_dataset.xy(*point))
+            # coords = [float(c) for c in coords_precasted]
+            # promising_points.append(coords)
+            promising_points.append(point)
 
+        return promising_points
+    
+def evaluate_line_elevation(anchors: list) -> list:
+    # Read elevation file
+    with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.tif') as elevation_dataset:
+        elevation_band = elevation_dataset.read(1)
 
-# read elevation file
-with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.tif') as elevation_dataset:
-    elevation_band = elevation_dataset.read(1)
+        # Retrieve the pixel locations of our anchors
+        x_a1, y_a1 = anchors[0]
+        x_a2, y_a2 = anchors[1]
 
-    # get the coordinates of two promising points
-    x_a1, y_a1 = elevation_dataset.index(*promising_points[0])
-    print(x_a1, y_a1)
+        # DDA algorithm - draw a line between the two points
+        x_c = x_a1  # initalize current "step" coordinates to first anchor
+        y_c = y_a1
+        dx = x_a2 - x_a1
+        dy = y_a2 - y_a1
+        steps = max(abs(dx), abs(dy))
+        x_increment = dx / steps
+        y_increment = dy / steps
+        elev_diffs = []
 
-    x_a2, y_a2 = elevation_dataset.index(*promising_points[10])
-    print(x_a2, y_a2)
+        for i in range(steps - 1):
+            x_c = x_c + x_increment
+            y_c = y_c + y_increment
+            # Distance to nearest anchor
+            d = min(m.dist([x_c, y_c], [x_a1, y_a1]), m.dist([x_c, y_c], [x_a2, y_a2]))   
+            # Elevation of nearest anchor
+            elev_nr_a = min(elevation_band[round(x_a1), round(y_a1)], elevation_band[round(x_a2), round(y_a2)])
+            # Find elevation of current pixel in our line
+            elev_c = elevation_band[round(x_c), round(y_c)]
+            # Get difference of max acceptable elevation and current pixel elevation
+            elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
+            # Add to list of elevation differences for each pixel in line
+            elev_diffs.append(elev_diff)
+        return elev_diffs
 
-    # DDA algorithm - draw a line between the two points
-    x_c = x_a1  # initalize current "step" coordinates to first anchor
-    y_c = y_a1
-    dx = x_a2 - x_a1
-    dy = y_a2 - y_a1
-    steps = max(abs(dx), abs(dy))
-    x_increment = dx / steps
-    y_increment = dy / steps
-    elev_diffs = []
-
-    for i in range(steps - 1):
-        x_c = x_c + x_increment
-        y_c = y_c + y_increment
-        # Distance to nearest anchor
-        d = min(m.dist([x_c, y_c], [x_a1, y_a1]), m.dist([x_c, y_c], [x_a2, y_a2]))   
-        # Elevation of nearest anchor
-        elev_nr_a = min(elevation_band[round(x_a1), round(y_a1)], elevation_band[round(x_a2), round(y_a2)])
-        # Find elevation of current pixel in our line
-        elev_c = elevation_band[round(x_c), round(y_c)]
-        # Get difference of max acceptable elevation and current pixel elevation
-        elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
-        # Add to list of elevation differences for each pixel in line
-        elev_diffs.append(elev_diff)
-    # Apply the sigmoid function to the sum of all our height differences
-    tot_elev_diff = (sum(elev_diffs) - np.mean(elev_diffs)) / np.std(elev_diffs) # Z-Score Standardization to avoid extreme sigmoid results
+def setup_generation(elev_diffs: list, anchors: list):
+    # Apply the sigmoid function to the sum of all pixel height differences
+    tot_elev_diff = (sum(elev_diffs) - np.mean(elev_diffs)) / np.std(elev_diffs) # Z-Score Standardization to normalize sigmoid results
     fitness = 1 / (1 + np.exp(-tot_elev_diff)) # sigmoid function
     # If every pixel in the current line is below our max acceptable elevation, add it to the "valid lines" list
     if all(e <= 0 for e in elev_diffs):
-        valid_lines.append([[x_a1, y_a1],[x_a2, y_a2], fitness])
+        valid_lines.append([[anchors[0]],[anchors[1]], fitness])
     print(tot_elev_diff)
+    print(fitness)
     print(valid_lines)
-        
+
+if __name__ == "__main__":
+    promising_anchors = find_significant_slopes()
+    promising_anchors = [[promising_anchors[0], promising_anchors[10]]]
+    for anchors in promising_anchors:
+        elev_diffs = evaluate_line_elevation(anchors)
+        print(elev_diffs, anchors)
+        setup_generation(elev_diffs, anchors)
+
+
+
+
+
     # Evaluate line as a whole
     # if fitness < .5 then good genetics pass
     # if fitness >=.5 then detemine how poorly performed
 
-
+    # open elevation file in main function and run evaluate line and setup generation within 
 
 
 
