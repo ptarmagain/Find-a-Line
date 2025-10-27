@@ -4,7 +4,7 @@ import numpy as np
 import math as m
 
 # Global Variables
-pxl_gran = 30           # pixel granularity
+pxl_gran = 30   # pixel granularity
 desired_min_length = 90
 desired_max_length = 300
 promising_points = []
@@ -80,9 +80,11 @@ with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.t
 
 
 
-
-
+    # update readme formula, no need for absolute values
     # log to console isntead of priting
+    # this line:
+    #    elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
+    #  the distance is being calculated based on pixels, not meters (1px=30m)
 
 
 
