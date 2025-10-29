@@ -29,38 +29,36 @@ def pair_points_by_distance(all_points: list):
     ex:) Input: [[1,2],[1,3],[1,4],[10,20]], 1,3  
         Output: [[[1,2],1,3]]]
     """
-    is_looping = True
     valid_lines = []
-    # distance_filtered_points = []
     count = 0
-    for a in all_points:
+
+    # Compare every point..
+    for i in range(len(all_points)):
+        a = all_points[i]
         count += 1
         print(count)
-        for b in all_points:
+        # To every other point
+        for j in range(i + 1,len(all_points)):
+            b = all_points[j]
             d = m.dist(a,b)
-            # print(d)
-            if 30 < d and d < 70:
+            if 60 < d and d < 100:
+                # Find difference between our formula and what the actual elevation is
                 elev_diffs = evaluate_line_elevation([a,b])
-                if all(e >= 0 for e in elev_diffs):
+                # If all pixels  meet our maximum height requirements, add the line to our list
+                if all(e > 0 for e in elev_diffs): 
                     valid_lines.append([a,b])
-                    is_looping=False
-                    break                   # just one for testing
-            if is_looping==False:
-                break
-                    # print(elev_diffs)
-    # print(distance_filtered_points)
-    # print(valid_lines)
+    # Print output as coordinates
     coordify(valid_lines)
 
 def coordify(pixels: list):
+    """Print the longitude and latitude of pairs of pixel values
+    ex:) Input: [[[1,][2]],[[3][4]]]
+        Output: [[[33.448376],[112.074036],[33.873940],[112.1748744]]]"""
     coords_list = []
     with rio.open('/Users/andrewpurchase/Documents/raster_data/hoffstadt/output_be.tif') as elevation_dataset:
         for anchors in pixels:
-            # print(anchors)
             coords_a1 = list(elevation_dataset.xy(*anchors[0]))
             coords_a2 = list(elevation_dataset.xy(*anchors[1]))
-            # print(coords_a)
-            # print(coords_b)
             coords_list.append([coords_a1, coords_a2])
     print(coords_list)
 
@@ -104,60 +102,3 @@ if __name__ == "__main__":
     significant_slopes = find_significant_slopes()
     print(len(significant_slopes))
     pair_points_by_distance(significant_slopes)
-
-    # significant_slopes = [[significant_slopes[0], significant_slopes[10]]]
-    # for anchors in significant_slopes:
-    #     elev_diffs = evaluate_line_elevation(anchors)
-    #     print(elev_diffs, anchors)
-    #     setup_generation(elev_diffs, anchors)
-
-
-
-
-
-    # Evaluate line as a whole
-    # if fitness < .5 then good genetics pass
-    # if fitness >=.5 then detemine how poorly performed
-
-    # open elevation file in main function and run evaluate line and setup generation within 
-
-
-
-    # update readme formula, no need for absolute values
-    # log to console isntead of priting
-    # this line:
-    #    elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
-    #  the distance is being calculated based on pixels, not meters (1px=30m)
-
-
-
-
-    # use slope band to determine significant points, such as 6 or higher (depends on granularity)
-        # save these points
-    #
-    # use the elevation band to draw lines between signifiicant locations
-    # for 'i' in significant locations:
-    #   find each other significant location within 200? meters
-    #   for j in each othernearby significant location
-    #       draw a line between the current significant location and other nearby significant location
-    #       determine if this line follows our formula
-    #       
-
-    # or
-
-    # pick random X significant locations and Y other significant locations that are between 50 and 250 meters of each X,
-    # for i, j in X, Y:
-    #   keep i and j in a list so that we don't attempt this exact same combination again
-    #   draw a line between the two and determine genetics
-    #   genetics are a percentage( pixels aligning with slope algorithm divided by total pixels in line ) (multiplied by a factor of how much the pixels exceed our minimum expectations)
-    #   any genetics that are 100 are stored in a list for final output
-    #   drop the lower 50% of genetics
-    #   for the top 50% of genetics, make one dna based on i and one on j, both to new locations, ensure not in "don't attempt" list
-    #   repeat i and j again
-    #   stop after a certain number of generations or if we have reached X number of satisfactory outputs
-
-
-    # The further you travel from the nearest anchor the lower elevation 
-
-        # https://portal.opentopography.org/lidarDataset?opentopoID=OTLAS.022011.2994.1&minX=-122.82526016235349&minY=45.51091832390634&maxX=-122.70166397094724&maxY=45.61571843784051
-        # resolution 6 ft
