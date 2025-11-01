@@ -21,8 +21,8 @@ if __name__ == "__main__":
     print(len(significant_slopes), 'potential anchors to evaluate')
     # Compare each promising anchor each other promising anchor
     valid_lines = sh.find_valid_lines(significant_slopes, elevation_file, desired_min_length, desired_max_length)
-    # Turn our list of raster pixels into a list of coordinates
+    # Turn our list of raster pixels into a list of GPS coordinates
     valid_line_coords = sh.coordify(valid_lines, elevation_file)
     print(valid_line_coords)
-    # Display these coordinates on a map
+    # Display these coordinate points on a map
     sh.mapify(valid_line_coords)
