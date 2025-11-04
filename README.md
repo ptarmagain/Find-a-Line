@@ -1,6 +1,14 @@
 # Find-a-Line
 This is an application that finds locations with significant highline potential. It works by extracting DEM data from .tiff files and evalutating the potential of each raster pixel by applying a custom "maximum elevation formula". Considering the vast volume of data available, a genetic algorithm is implemented in order to focus on regions with the most promising topographical characteristics.
 
+I have found this useful for:::
+big lines
+finding smaller lines next to big lines
+
+Limitations and future scope::
+does not take into account vegetation and other factors that may make rigging difficult, this is possible to achieve with adding DSM data
+Would be nice to overlay with property maps
+
 ## Maximum Elevation Formula
 Due to deflection, the further you travel from the nearest anchor the lower elevation required. The maximum safe elevation for a hypothetical 0 meter highline is 6 meters lower than the anchors- this is to account for a leash fall. From there we require 15cm more clearance for every meter longer the line is. This slope was calculated based on a mid stretch webbing, a 155kg athlete, and 2kN tension for a median stretch webbing. Naturally there are many other variables to account for, but for simplicity sake we are using a formula that may be described as an "overestimation" for this specific application. 
 
