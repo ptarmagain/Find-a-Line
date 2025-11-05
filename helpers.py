@@ -189,10 +189,8 @@ def find_valid_lines(all_points: List[List[int]],
     """Finds valid line pairs using parallel processing.
     
     OPTIMIZED VERSION with the following improvements:
-    1. Loads elevation data once per worker process instead of reopening for each evaluation
-    2. Uses multiprocessing to evaluate line pairs in parallel
-    3. Pre-filters pairs by distance using vectorized NumPy operations
-    4. Better progress tracking and performance metrics
+    - Uses multiprocessing to evaluate line pairs in parallel
+    - Better progress tracking and performance metrics
     
     Receives a list of raster pixel points and returns point pairs that are 
     between a specified distance of each other and match our elevation requirements.
@@ -372,6 +370,5 @@ def mapify(coord_pairs: List[List[float]]):
 
     # Add basemap
     ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.OpenTopoMap)
-
 
     plt.show()

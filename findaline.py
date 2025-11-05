@@ -5,14 +5,6 @@ Find-a-Line - Highline Location Finder
 This application finds locations with significant highline potential by analyzing
 DEM (Digital Elevation Model) raster data.
 
-OPTIMIZED VERSION - Performance Improvements:
-- Parallel processing using multiprocessing (utilizes all CPU cores)
-- Elevation data loaded once per worker process (not per evaluation)
-- Vectorized distance calculations using NumPy
-- Early exit optimizations for invalid lines
-- Pre-filtering of anchor pairs by distance constraints
-
-Performance gains: 10-100x faster depending on CPU cores and dataset size.
 """
 
 import helpers as sh
@@ -20,10 +12,10 @@ import helpers as sh
 # Configuration Variables
 # =======================
 # If using NASADEM data, these values are in metres
-desired_min_length = 100  # Minimum line length in metres
-desired_max_length = 200  # Maximum line length in metres
-slope_file = '/Users/andrewpurchase/Documents/raster_data/past_dalles/viz/viz.be_slope.tif'
-elevation_file = '/Users/andrewpurchase/Documents/raster_data/past_dalles/output_be.tif'
+desired_min_length = 200  # Minimum line length in metres
+desired_max_length = 2000  # Maximum line length in metres
+slope_file = '/path/to/data/viz/viz.be_slope.tif'
+elevation_file = '/path/to/data/output_be.tif'
 pixel_granularity = 30  # Pixel resolution in metres (30m for NASADEM data)
 
 # Optional: Set number of parallel processes (defaults to CPU count - 1)
