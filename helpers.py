@@ -27,16 +27,12 @@ def find_significant_slopes(slope_file: str, pixel_granularity: int) -> List[Lis
     """
     with rio.open(slope_file) as slope_dataset:
         slope_band = slope_dataset.read(1)
-        # Use numpy for efficient filtering
         return np.argwhere(slope_band > pixel_granularity * 1.15 + 6).tolist()
 
 
 def load_elevation_data(elevation_file: str) -> Tuple[np.ndarray, dict]:
-    """Load elevation data once and return it with metadata.
-    
-    This avoids reopening the file for every line evaluation, which is a major
-    performance bottleneck.
-    
+    """Load elevation data and return it with metadata.
+        
     Args:
         elevation_file: Path to the elevation raster file
     
@@ -57,10 +53,7 @@ def load_elevation_data(elevation_file: str) -> Tuple[np.ndarray, dict]:
 def evaluate_line_elevation(anchors: Tuple[List[int], List[int]], 
                             elevation_band: np.ndarray) -> List[float]:
     """Evaluates elevation differences along a line between two anchor points.
-    
-    OPTIMIZED: Now accepts pre-loaded elevation_band instead of reopening file.
-    Uses optimized NumPy operations for distance calculations.
-    
+        
     Draws a line between two points using DDA algorithm and determines the 
     difference between our maximum desired elevation and the actual elevation 
     of each point in the line.
@@ -107,7 +100,6 @@ def evaluate_line_elevation(anchors: Tuple[List[int], List[int]],
     x_c = float(x_a1)
     y_c = float(y_a1)
 
-    # Early exit if any pixel fails (optimization for invalid lines)
     for _ in range(steps - 1):
         x_c += x_increment
         y_c += y_increment
@@ -135,8 +127,7 @@ def evaluate_line_elevation(anchors: Tuple[List[int], List[int]],
         elev_diff = elev_nr_a - (0.15 * d) - 6 - elev_c
         elev_diffs.append(elev_diff)
         
-        # Early exit optimization: if we find a pixel that's too high, stop checking
-        # This saves computation for invalid lines
+        # Early exit: if we find a pixel that's too high, stop checking
         if elev_diff <= 0:
             break
     
@@ -226,7 +217,6 @@ def find_valid_lines(all_points: List[List[int]],
     print(f"Estimated total comparisons: ~{num_points * (num_points - 1) // 2}")
     
     # Pre-filter: Generate candidate pairs using vectorized distance calculations
-    # This is much faster than checking distance inside the evaluation loop
     print("Generating candidate anchor pairs within length constraints...")
     candidate_pairs = []
     
@@ -242,7 +232,7 @@ def find_valid_lines(all_points: List[List[int]],
             remaining_points = points_array[j+1:]
             
             if len(remaining_points) > 0:
-                # Vectorized distance calculation - much faster than looping
+                # Vectorized distance calculation
                 distances = np.linalg.norm(remaining_points - a1, axis=1)
                 # Filter by distance constraints
                 valid_mask = (distances > min_length) & (distances < max_length)
@@ -315,9 +305,7 @@ def find_valid_lines(all_points: List[List[int]],
 
 def coordify(pixel_pairs: List[List[List[int]]], elevation_file: str) -> List[List[float]]:
     """Convert pixel coordinates to GPS coordinates (longitude, latitude).
-    
-    OPTIMIZED: Opens elevation file once instead of for each pair.
-    
+        
     Args:
         pixel_pairs: List of pixel coordinate pairs [[[x1, y1], [x2, y2]], ...]
         elevation_file: Path to elevation raster file (used for coordinate transform)
@@ -374,23 +362,16 @@ def mapify(coord_pairs: List[List[float]]):
     
     # Plot the lines
     fig, ax = plt.subplots(figsize=(10, 10))
-    
-    # Neon pink color: #FF10F0 (bright pink with high saturation)
-    neon_pink = '#FF10F0'
-    
-    # Plot lines with thin width (0.5-1.0 is thin, but visible)
-    gdf.plot(ax=ax, color=neon_pink, linewidth=0.8, alpha=0.9)
+        
+    # Plot lines
+    gdf.plot(ax=ax, color='#FF10F0', linewidth=0.8, alpha=0.9)
+
+    # Show circles at line midpoints
+    gdf_midpoints = gpd.GeoDataFrame(geometry=line_midpoints, crs="EPSG:4326")
+    gdf_midpoints.plot(ax=ax, color='#FF10F0', markersize=100, marker='o', alpha=0.6, zorder=3)
 
     # Add basemap
     ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.OpenTopoMap)
-    
-    # Calculate map extent to determine if zoomed out
-    bounds = gdf.total_bounds
-    extent = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])  # lon_range * lat_range
-    
-    # Show circles at line midpoints only when zoomed out (large extent)
-    if extent > 0.01:  # Threshold for zoomed out view
-        gdf_midpoints = gpd.GeoDataFrame(geometry=line_midpoints, crs="EPSG:4326")
-        gdf_midpoints.plot(ax=ax, color=neon_pink, markersize=100, marker='o', alpha=0.6, zorder=3)
+
 
     plt.show()

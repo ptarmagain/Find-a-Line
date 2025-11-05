@@ -24,7 +24,7 @@ This may be visualised as a slope below the line that is always exactly 6 meters
 <img width="1361" height="224" alt="visualisation" src="https://github.com/user-attachments/assets/5147f16f-768c-4a63-89b6-105c0c6ea8bd" />
 
 
-*It is worth noting that this formula for a "maximum safe highline elevation at any given point" does not account for a potential mainline failure, under which circumstance a substantially lower elevation is required for safety. As always, use your best judgement; this is simply a tool to aid in surveying.*
+*It is worth noting that this formula for a "maximum safe highline elevation at any given point" does not account for a potential mainline failure, under which circumstance a considerably lower elevation is required for safety. As always, use your best judgement; this is simply a tool to aid in surveying.*
 
 ## Algorithm Breakdown
 - We first extract raster pixels of significant slope to use as a starting point for promising anchors.

@@ -20,17 +20,17 @@ import helpers as sh
 # Configuration Variables
 # =======================
 # If using NASADEM data, these values are in metres
-desired_min_length = 4000  # Minimum line length in meters
-desired_max_length = 7000  # Maximum line length in meters
-slope_file = '/Users/andrewpurchase/Documents/raster_data/bigger_past_dalles/viz/viz.be_slope.tif'
-elevation_file = '/Users/andrewpurchase/Documents/raster_data/bigger_past_dalles/output_be.tif'
-pixel_granularity = 30  # Pixel resolution in meters (30m for NASADEM data)
+desired_min_length = 100  # Minimum line length in metres
+desired_max_length = 200  # Maximum line length in metres
+slope_file = '/Users/andrewpurchase/Documents/raster_data/past_dalles/viz/viz.be_slope.tif'
+elevation_file = '/Users/andrewpurchase/Documents/raster_data/past_dalles/output_be.tif'
+pixel_granularity = 30  # Pixel resolution in metres (30m for NASADEM data)
 
 # Optional: Set number of parallel processes (defaults to CPU count - 1)
 # num_processes = 4  # Uncomment and set to override default
 
 if __name__ == "__main__":
-    # Convert length constraints from meters to pixels
+    # Convert length constraints from metres to pixels
     desired_min_length_px = desired_min_length // pixel_granularity
     desired_max_length_px = desired_max_length // pixel_granularity
     
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     
     # Step 2: Compare each promising anchor to every other anchor
     # This uses parallel processing for optimal performance
-    print("\nStep 2: Evaluating anchor pairs (PARALLEL PROCESSING)...")
+    print("\nStep 2: Evaluating anchor pairs...")
     valid_lines = sh.find_valid_lines(
         significant_slopes, 
         elevation_file, 
