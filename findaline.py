@@ -20,8 +20,8 @@ import helpers as sh
 # Configuration Variables
 # =======================
 # If using NASADEM data, these values are in metres
-desired_min_length = 100  # Minimum line length in meters
-desired_max_length = 200   # Maximum line length in meters
+desired_min_length = 4000  # Minimum line length in meters
+desired_max_length = 7000  # Maximum line length in meters
 slope_file = '/Users/andrewpurchase/Documents/raster_data/bigger_past_dalles/viz/viz.be_slope.tif'
 elevation_file = '/Users/andrewpurchase/Documents/raster_data/bigger_past_dalles/output_be.tif'
 pixel_granularity = 30  # Pixel resolution in meters (30m for NASADEM data)

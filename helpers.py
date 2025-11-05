@@ -352,6 +352,7 @@ def mapify(coord_pairs: List[List[float]]):
     # coord_pairs contains: [anchor1_lon, anchor1_lat, anchor2_lon, anchor2_lat, ...]
     # Each line is formed by pairs: (0,1), (2,3), (4,5), etc.
     lines = []
+    line_midpoints = []
     for i in range(0, len(coord_pairs), 2):
         if i + 1 < len(coord_pairs):
             # Create a line from anchor1 to anchor2
@@ -359,6 +360,7 @@ def mapify(coord_pairs: List[List[float]]):
             anchor2 = coord_pairs[i + 1]  # [lon, lat]
             line = LineString([(anchor1[0], anchor1[1]), (anchor2[0], anchor2[1])])
             lines.append(line)
+            line_midpoints.append(line.interpolate(0.5, normalized=True))  # Midpoint of line
     
     if not lines:
         print("No lines to display.")
@@ -381,5 +383,14 @@ def mapify(coord_pairs: List[List[float]]):
 
     # Add basemap
     ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.OpenTopoMap)
+    
+    # Calculate map extent to determine if zoomed out
+    bounds = gdf.total_bounds
+    extent = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])  # lon_range * lat_range
+    
+    # Show circles at line midpoints only when zoomed out (large extent)
+    if extent > 0.01:  # Threshold for zoomed out view
+        gdf_midpoints = gpd.GeoDataFrame(geometry=line_midpoints, crs="EPSG:4326")
+        gdf_midpoints.plot(ax=ax, color=neon_pink, markersize=100, marker='o', alpha=0.6, zorder=3)
 
     plt.show()
