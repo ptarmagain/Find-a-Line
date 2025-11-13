@@ -12,22 +12,22 @@ from functools import partial
 from typing import List, Tuple, Optional
 import time
 
-def find_significant_slopes(slope_file: str, pixel_granularity: int) -> List[List[int]]:
+def find_significant_slopes(slope_file: str, pixel_granularity: int = None) -> List[List[int]]:
     """Finds significant slopes from a raster file.
-    
-    Significant slopes are defined as slopes matching our formula.
-    Outputs a list of pixel coords matching criteria.
-    
+        
     Args:
         slope_file: Path to the slope raster file
-        pixel_granularity: Pixel resolution in meters (e.g., 30 for NASADEM)
+        pixel_granularity: Pixel resolution in meters (deprecated, kept for backward compatibility)
     
     Returns:
-        List of [row, col] pixel coordinates with significant slopes
+        List of [row, col] pixel coordinates
     """
     with rio.open(slope_file) as slope_dataset:
         slope_band = slope_dataset.read(1)
-        return np.argwhere(slope_band > pixel_granularity * 1.15 + 6).tolist()
+        
+        threshold = np.percentile(slope_band, 99.95)
+        
+        return np.argwhere(slope_band >= threshold).tolist()
 
 
 def load_elevation_data(elevation_file: str) -> Tuple[np.ndarray, dict]:
@@ -315,12 +315,12 @@ def coordify(pixel_pairs: List[List[List[int]]], elevation_file: str) -> List[Li
     with rio.open(elevation_file) as elevation_dataset:
         for anchors in pixel_pairs:
             # Convert pixel coordinates to geographic coordinates
-            coords_a1 = list(elevation_dataset.xy(*anchors[0]))
-            coords_a2 = list(elevation_dataset.xy(*anchors[1]))
+            coords_a1 = list(elevation_dataset.xy(*anchors))
+            # coords_a2 = list(elevation_dataset.xy(*anchors[1]))
             coords_a1f = [float(c) for c in coords_a1]
-            coords_a2f = [float(c) for c in coords_a2]
+            # coords_a2f = [float(c) for c in coords_a2]
             coord_pairs.append(coords_a1f)
-            coord_pairs.append(coords_a2f)
+            # coord_pairs.append(coords_a2f)
     return coord_pairs
 
 
@@ -334,39 +334,34 @@ def mapify(coord_pairs: List[List[float]]):
         coord_pairs: List of [longitude, latitude] coordinates where
                      consecutive pairs form line segments (i.e., [0,1], [2,3], etc.)
     """
-    # Create LineString geometries from consecutive coordinate pairs
-    # coord_pairs contains: [anchor1_lon, anchor1_lat, anchor2_lon, anchor2_lat, ...]
-    # Each line is formed by pairs: (0,1), (2,3), (4,5), etc.
-    lines = []
-    line_midpoints = []
-    for i in range(0, len(coord_pairs), 2):
-        if i + 1 < len(coord_pairs):
-            # Create a line from anchor1 to anchor2
-            anchor1 = coord_pairs[i]  # [lon, lat]
-            anchor2 = coord_pairs[i + 1]  # [lon, lat]
-            line = LineString([(anchor1[0], anchor1[1]), (anchor2[0], anchor2[1])])
-            lines.append(line)
-            line_midpoints.append(line.interpolate(0.5, normalized=True))  # Midpoint of line
+    # Create Point geometries from coordinate pairs
+    # coord_pairs contains: [anchor1_lon, anchor1_lat], [anchor2_lon, anchor2_lat], ...
+    # Since coordify only returns anchor1 currently, we create Point geometries
+    points = []
+    for coord in coord_pairs:
+        # Create a Point geometry from [lon, lat]
+        point = Point(coord[0], coord[1])
+        points.append(point)
     
-    if not lines:
-        print("No lines to display.")
+    if not points:
+        print("No points to display.")
         return
     
-    # Create GeoDataFrame with LineString geometries
+    # Create GeoDataFrame with Point geometries
     gdf = gpd.GeoDataFrame(
-        geometry=lines,
+        geometry=points,
         crs="EPSG:4326"  # WGS84 coordinate system
     )
     
-    # Plot the lines
+    # Plot the points
     fig, ax = plt.subplots(figsize=(10, 10))
         
-    # Plot lines
-    gdf.plot(ax=ax, color='#FF10F0', linewidth=0.8, alpha=0.9)
+    # Plot points
+    gdf.plot(ax=ax, color='#FF10F0', markersize=100, marker='o', alpha=0.6, zorder=3)
 
     # Show circles at line midpoints
-    gdf_midpoints = gpd.GeoDataFrame(geometry=line_midpoints, crs="EPSG:4326")
-    gdf_midpoints.plot(ax=ax, color='#FF10F0', markersize=100, marker='o', alpha=0.6, zorder=3)
+    # gdf_midpoints = gpd.GeoDataFrame(geometry=line_midpoints, crs="EPSG:4326")
+    # gdf_midpoints.plot(ax=ax, color='#FF10F0', markersize=100, marker='o', alpha=0.6, zorder=3)
 
     # Add basemap
     ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.OpenTopoMap)

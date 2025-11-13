@@ -13,9 +13,9 @@ import helpers as sh
 # =======================
 # If using NASADEM data, these values are in metres
 desired_min_length = 200  # Minimum line length in metres
-desired_max_length = 2000  # Maximum line length in metres
-slope_file = '/path/to/data/viz/viz.be_slope.tif'
-elevation_file = '/path/to/data/output_be.tif'
+desired_max_length = 250  # Maximum line length in metres
+slope_file = 'viz.be_slope.tif'
+elevation_file = 'output_be.tif'
 pixel_granularity = 30  # Pixel resolution in metres (30m for NASADEM data)
 
 # Optional: Set number of parallel processes (defaults to CPU count - 1)
@@ -38,26 +38,26 @@ if __name__ == "__main__":
     significant_slopes = sh.find_significant_slopes(slope_file, pixel_granularity)
     print(f"Found {len(significant_slopes)} potential anchors to evaluate")
     
-    # Step 2: Compare each promising anchor to every other anchor
-    # This uses parallel processing for optimal performance
-    print("\nStep 2: Evaluating anchor pairs...")
-    valid_lines = sh.find_valid_lines(
-        significant_slopes, 
-        elevation_file, 
-        desired_min_length_px, 
-        desired_max_length_px
-        # num_processes=num_processes  # Uncomment to override default
-    )
+    # # Step 2: Compare each promising anchor to every other anchor
+    # # This uses parallel processing for optimal performance
+    # print("\nStep 2: Evaluating anchor pairs...")
+    # valid_lines = sh.find_valid_lines(
+    #     significant_slopes, 
+    #     elevation_file, 
+    #     desired_min_length_px, 
+    #     desired_max_length_px
+    #     # num_processes=num_processes  # Uncomment to override default
+    # )
     
     # Step 3: Convert pixel coordinates to GPS coordinates
     print("\nStep 3: Converting pixel coordinates to GPS coordinates...")
-    valid_line_coords = sh.coordify(valid_lines, elevation_file)
-    print(f"\nFound {len(valid_line_coords) // 2} valid line pairs")
-    print("GPS Coordinates:")
-    for i in range(0, len(valid_line_coords), 2):
-        print(f"  Line {i//2 + 1}:")
-        print(f"    Anchor 1: {valid_line_coords[i]}")
-        print(f"    Anchor 2: {valid_line_coords[i+1]}")
+    valid_line_coords = sh.coordify(significant_slopes, elevation_file)
+    # print(f"\nFound {len(valid_line_coords) // 2} valid line pairs")
+    # print("GPS Coordinates:")
+    # for i in range(0, len(valid_line_coords), 2):
+    #     print(f"  Line {i//2 + 1}:")
+        # print(f"    Anchor 1: {valid_line_coords[i]}")
+        # print(f"    Anchor 2: {valid_line_coords[i+1]}")
     
     # Step 4: Display results on a map
     print("\nStep 4: Displaying results on map...")
